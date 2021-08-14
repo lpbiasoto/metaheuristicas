@@ -9,7 +9,7 @@ from numba import jit
 
 def extract_data():
     raiz = Path.cwd() #capturo diretório atual
-    pasta_dados = Path.joinpath(raiz,"../dados") #defino onde estão os problemas
+    pasta_dados = Path.joinpath(raiz,"dados") #defino onde estão os problemas
     prob_por_arquivo = 10 #informando quantos problemas por arquivo eu tenho
     conjuntos = [10,20,50,100,200,500,1000]
 
