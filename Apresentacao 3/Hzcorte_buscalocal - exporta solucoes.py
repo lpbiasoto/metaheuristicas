@@ -203,12 +203,13 @@ dados = {}
 objetivos = {}
 objetivos_min = {}
 solucoes_min = {}
+solucao_busca = {}
 tempos_construtiva = {}
 tempos = {}
 dados = extract_data()
 lista_hs = [0.8, 0.6, 0.4, 0.2]
-conjuntos= [10,20,50,100,200,500,1000]
-lista_z = [0.25 , 0.5 , 0.75 , 0.9, 2]
+conjuntos = [10,20,50,100,200,500,1000]
+lista_z = [0.25 , 0.5 , 0.6 , 0.75, 2]
 lista_problemas = list(range(1,11))
 
 
@@ -421,6 +422,7 @@ for conjunto in conjuntos:
                 ####### CONSOLIDANDO OS RESULTADOS #######
                 print(conjunto,problema,h,z_corte)
                 objetivos[(conjunto,problema,h,z_corte)] = seq_obj[-1]
+                solucao_busca[(conjunto,problema,h,z_corte)] = seq_sols[-1]
                 if (conjunto,problema,h) in objetivos_min:
                     if seq_obj[-1] < objetivos_min[(conjunto,problema,h)]:
                         objetivos_min[(conjunto,problema,h)] = seq_obj[-1]
@@ -438,17 +440,20 @@ for conjunto in conjuntos:
 objetivos_pandas = pd.Series(objetivos)
 tempos_pandas = pd.Series(tempos)
 tempos_pandas2 = pd.Series(tempos_construtiva)
-
+solucao_busca_pandas = pd.Series(solucao_busca)
 
 report = pd.ExcelWriter('resultados.xlsx')
-
+report2 = pd.ExcelWriter('solucoes.xlsx')
 for cada_z in lista_z:
     obj = objetivos_pandas[:,:,:,cada_z]
     objetivos_unstack = obj.unstack(level=-2)
     objetivos_unstack.to_excel(report, sheet_name=("z= "+str(cada_z)))
+
 t_unstack = tempos_pandas.unstack(level=-4)
 t_unstack.to_excel(report,sheet_name="Tempos")
 
 t_unstack = tempos_pandas2.unstack(level=-4)
 t_unstack.to_excel(report,sheet_name="Tempos_construtiva")
+solucao_busca_pandas.to_pickle("solucoes.pkl")
 report.save()
+report2.save()
