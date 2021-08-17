@@ -437,17 +437,16 @@ for conjunto in conjuntos:
 
     fim=time.time()
 
-objetivos_pandas = pd.Series(objetivos)
+objetivos_pandas = pd.Series(objetivos_min)
 tempos_pandas = pd.Series(tempos)
 tempos_pandas2 = pd.Series(tempos_construtiva)
 solucao_busca_pandas = pd.Series(solucao_busca)
 
 report = pd.ExcelWriter('resultados.xlsx')
 report2 = pd.ExcelWriter('solucoes.xlsx')
-for cada_z in lista_z:
-    obj = objetivos_pandas[:,:,:,cada_z]
-    objetivos_unstack = obj.unstack(level=-2)
-    objetivos_unstack.to_excel(report, sheet_name=("z= "+str(cada_z)))
+breakpoint()
+objetivos_unstack = objetivos_pandas.unstack(level=-3)
+objetivos_unstack.to_excel(report, sheet_name=("Objetivos"))
 
 t_unstack = tempos_pandas.unstack(level=-4)
 t_unstack.to_excel(report,sheet_name="Tempos")

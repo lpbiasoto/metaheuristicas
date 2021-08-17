@@ -85,9 +85,9 @@ def calcula_objetivo(solucao, ai, bi, pi, d):
         
     ai_pi = ai[set_E]/pi[set_E] #apenas do set_E
     bi_pi = bi[set_T]/pi[set_T] #apenas do set_T
-    set_E_pi = pi[set_E]    
+    # set_E_pi = pi[set_E]    
     
-    set_T_pi = pi[set_T]
+    # set_T_pi = pi[set_T]
     ai_pi_decr = np.flip(np.argsort(ai_pi)) #ordem de ai_pi e depois por pi.
     bi_pi_decr = np.flip(np.argsort(bi_pi))
     set_E = set_E[ai_pi_decr]
