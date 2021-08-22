@@ -63,9 +63,9 @@ def coliseu(sols, n, ai, bi, pi, d):
     sorteados =  np.array([int(round(np.random.random()*indices_array,0)) for i in range(0,n)]) 
     custo = 999999999999
     for competidor in sols[sorteados]:
-        
         objetivo_competidor = _calcula_objetivo_GA(competidor, ai, bi, pi, d)
         if objetivo_competidor < custo:
+            custo = objetivo_competidor
             competidor_vencedor = competidor
             objetivo_vencedor = objetivo_competidor
     return competidor_vencedor, objetivo_vencedor
