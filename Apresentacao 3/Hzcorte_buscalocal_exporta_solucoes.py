@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import time
 from numba import jit
+import pickle
 
 def extract_data():
     raiz = Path.cwd() #capturo diretório atual
@@ -85,9 +86,9 @@ def calcula_objetivo(solucao, ai, bi, pi, d):
         
     ai_pi = ai[set_E]/pi[set_E] #apenas do set_E
     bi_pi = bi[set_T]/pi[set_T] #apenas do set_T
-    set_E_pi = pi[set_E]    
+    # set_E_pi = pi[set_E]    
     
-    set_T_pi = pi[set_T]
+    # set_T_pi = pi[set_T]
     ai_pi_decr = np.flip(np.argsort(ai_pi)) #ordem de ai_pi e depois por pi.
     bi_pi_decr = np.flip(np.argsort(bi_pi))
     set_E = set_E[ai_pi_decr]
@@ -161,12 +162,12 @@ def busca_local(set_E, set_T, conjunto, ai, bi, pi, d, seq_obj):
     sols = {}
     seq_sols = []
     seq_sols.append(solucao_pre_buscalocal)
-    obj_original = seq_obj[-1]
+    # obj_original = seq_obj[-1]
     obj_atual = seq_obj[-1]
-    continua = True
-    contador_aleatorio = 0
+    # continua = True
+    # contador_aleatorio = 0
     lista_tabu = [conjunto+1]
-    contador_tabu = 0
+    # contador_tabu = 0
     aceita_pior = False
     contador_pior = 0
 
@@ -207,6 +208,11 @@ solucao_busca = {}
 tempos_construtiva = {}
 tempos = {}
 dados = extract_data()
+
+with open("dados.pkl", "wb") as infile:
+    pickle.dump(dados, infile)
+
+
 lista_hs = [0.8, 0.6, 0.4, 0.2]
 conjuntos = [10,20,50,100,200,500,1000]
 lista_z = [0.25 , 0.5 , 0.6 , 0.75, 2]
@@ -441,6 +447,9 @@ objetivos_pandas = pd.Series(objetivos_min)
 tempos_pandas = pd.Series(tempos)
 tempos_pandas2 = pd.Series(tempos_construtiva)
 solucao_busca_pandas = pd.Series(solucao_busca)
+
+with open("objetivos_min.pkl", "wb") as infile:
+    pickle.dump(objetivos_min, infile)
 
 report = pd.ExcelWriter('resultados.xlsx')
 report2 = pd.ExcelWriter('solucoes.xlsx')
