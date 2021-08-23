@@ -6,7 +6,9 @@ import pandas as pd
 import time
 from numba import jit
 import pickle
+from funcoes_BuscaLocal import *
 from funcoes_GA import *
+from funcoes_gerais import *
 
 dados = {}
 
@@ -21,9 +23,6 @@ conjuntos = [10,20,50,100,200,500,1000]
 lista_z = [0.25 , 0.5 , 0.6 , 0.75, 2]
 lista_problemas = list(range(1,11))
 
-
-
-
 populacao = {}
 qtd_pop_inicial = {}
 for conjunto in conjuntos:
@@ -37,14 +36,57 @@ for conjunto in conjuntos:
             d=int(sum(pi)*h)
 
             lista_populacao_inicial = np.array([solucoes[(conjunto,problema,h,z_corte)] for z_corte in lista_z])
-            populacao[(conjunto, h, problema)] = lista_populacao_inicial
-            list_arrays_unicos = list(map(np.array, set(map(tuple, lista_populacao_inicial))))
-            qtd_pop_inicial[(conjunto, h, problema)] = len(list_arrays_unicos)
 
-            populacao_total = []
-            
-            cromossomos_unicos = len(list(map(np.array, set(map(tuple, populacao_total)))))
-            
+            melhor_obj, melhor_sol = 99999999999, np.array([])
+            for key in solucoes:
+                obj = calcula_objetivo(solucoes[key], ai, bi, pi, d)
+                if obj < melhor_obj:
+                    melhor_obj, melhor_sol = obj, solucoes[key]
+
+            populacao[(conjunto, h, problema)] = lista_populacao_inicial
+            # list_arrays_unicos = list(map(np.array, set(map(tuple, lista_populacao_inicial))))
+            # qtd_pop_inicial[(conjunto, h, problema)] = len(list_arrays_unicos)
+
+            n_iter_ga = 1000
+            taxa_mutacao_inicial = 0.30
+            n_pop_inicial = max(2,conjunto*0.1)
+
+            populacao_total = lista_populacao_inicial
+            # cromossomos_unicos = len(list(map(np.array, set(map(tuple, populacao_total)))))
+            populacao_pais = []
+            populacao_filhos = []
+            for iter in range(0, n_iter_ga):
+                populacao_filhos = []
+
+                taxa_mutacao = (n_iter_ga - iter)/n_iter_ga*(taxa_mutacao_inicial-0.01) + 0.01
+
+                if iter <= n_iter_ga/2:
+                    n_pop = int(n_pop_inicial + iter/2)
+                else:
+                    n_pop = int(n_pop_inicial + n_iter_ga/2 - iter/2)
+                print(n_pop)
+                populacao_pais = np.array([coliseu(lista_populacao_inicial,2, ai, bi, pi, d)[0] for _ in range(n_pop*2)])
+                
+                for i in range(0, n_pop, 2):
+                    pai1, pai2 = populacao_pais[i], populacao_pais[i+1]
+                    filho = crossover_r(pai1, pai2)
+                    filho_mutacao = mutacao(filho, taxa_mutacao)
+                    populacao_filhos.append(filho_mutacao)
+
+                populacao_total = populacao_total + populacao_filhos
+
+                cromossomos_unicos_pop = list(map(np.array, set(map(tuple, populacao_total))))
+
+                # objs_pop, cromossomos_pop = avaliar_pop(cromossomos_unicos_pop, ai, bi, pi, d)
+
+                fitness_cromossomos = []
+                for cromossomo in cromossomos_unicos_pop:
+                    fitness_cromossomos.append(calcula_objetivo_GA(cromossomo, ai, bi, pi, d))
+                breakpoint()
+
+
+
+            breakpoint()
             # for iteracoes in range(1,100):
 
             # for cromossomo_inicial in lista_populacao_inicial:
