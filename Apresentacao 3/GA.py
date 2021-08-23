@@ -55,7 +55,7 @@ for conjunto in conjuntos:
             # cromossomos_unicos = len(list(map(np.array, set(map(tuple, populacao_total)))))
             populacao_pais = []
             populacao_filhos = []
-            for iter in range(0, n_iter_ga):
+            for iter in range(n_iter_ga):
                 populacao_filhos = []
 
                 taxa_mutacao = (n_iter_ga - iter)/n_iter_ga*(taxa_mutacao_inicial-0.01) + 0.01
@@ -73,7 +73,7 @@ for conjunto in conjuntos:
                     filho_mutacao = mutacao(filho, taxa_mutacao)
                     populacao_filhos.append(filho_mutacao)
 
-                populacao_total = populacao_total + populacao_filhos
+                populacao_total = np.vstack((populacao_total,populacao_filhos))
 
                 cromossomos_unicos_pop = list(map(np.array, set(map(tuple, populacao_total))))
 
@@ -82,6 +82,7 @@ for conjunto in conjuntos:
                 fitness_cromossomos = []
                 for cromossomo in cromossomos_unicos_pop:
                     fitness_cromossomos.append(calcula_objetivo_GA(cromossomo, ai, bi, pi, d))
+                    
                 breakpoint()
 
 

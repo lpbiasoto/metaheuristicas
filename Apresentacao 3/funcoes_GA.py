@@ -55,8 +55,8 @@ def calcula_objetivo_GA(solucao, ai, bi, pi, d):
     set_E, set_T = transforma(solucao)
     
     if np.sum(pi[set_E])>d:
-        set_E, set_T = _repara_solucao(set_E,set_T,ai,bi,pi,d)
-        print(np.sum(pi[set_E])>d)
+        # set_E, set_T = _repara_solucao(set_E,set_T,ai,bi,pi,d)
+        return 99999999999
   
     ai_pi = ai[set_E]/pi[set_E] #apenas do set_E
     bi_pi = bi[set_T]/pi[set_T] #apenas do set_T
