@@ -19,7 +19,8 @@ solucoes_pandas = pd.read_pickle('solucoes.pkl')
 solucoes = solucoes_pandas.to_dict()
 
 lista_hs = [0.8, 0.6, 0.4, 0.2]
-conjuntos = [10,20,50,100,200,500,1000]
+# conjuntos = [10,20,50,100,200,500,1000]
+conjuntos = [100,200,500,1000]
 lista_z = [0.25 , 0.5 , 0.6 , 0.75, 2]
 lista_problemas = list(range(1,11))
 
