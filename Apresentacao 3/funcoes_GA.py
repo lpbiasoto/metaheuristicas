@@ -36,7 +36,7 @@ def mutacao(sol,p): #sol = np.array com solução, formato booleano.
     return copia_sol
 
 
-# @jit(nopython=True)
+@jit(nopython=True)
 def coliseu(sols, n, ai, bi, pi, d):   
     indices_array = len(sols) - 1
     sorteados =  np.array([int(round(np.random.random()*indices_array,0)) for i in range(0,n)]) 
@@ -49,14 +49,13 @@ def coliseu(sols, n, ai, bi, pi, d):
             objetivo_vencedor = objetivo_competidor
     return competidor_vencedor, objetivo_vencedor
 
-# @jit(nopython=True)
+@jit(nopython=True)
 def calcula_objetivo_GA(solucao, ai, bi, pi, d):
     
     set_E, set_T = transforma(solucao)
     
     if np.sum(pi[set_E])>d:
-        # set_E, set_T = _repara_solucao(set_E,set_T,ai,bi,pi,d)
-        return 99999999999
+        set_E, set_T = _repara_solucao(set_E,set_T,ai,bi,pi,d)
   
     ai_pi = ai[set_E]/pi[set_E] #apenas do set_E
     bi_pi = bi[set_T]/pi[set_T] #apenas do set_T
@@ -80,15 +79,13 @@ def verifica_factibilidade_e_repara_solucao(solucao, ai, bi, pi, d):
     solucao_reparada = transforma_bin(set_E, set_T)
     return solucao_reparada
 
-# @jit(nopython=True)
-def _repara_solucao(set_E_in,set_T_in, ai,bi,pi,d):
-    set_E = np.copy(set_E_in)
-    set_T = np.copy(set_T_in)
-
+@jit(nopython=True)
+def _repara_solucao(set_E,set_T, ai,bi,pi,d):
+    sol_ = transforma_bin(set_E,set_T)
     d_solucao = np.sum(pi[set_E])
 
     if (d_solucao < d): #solução não é infactível, vou sair sem fazer nada.
-        return set_E, set_T
+        return (set_E,set_T)
 
     z = (bi-ai)/(bi+ai)
     violacao = d_solucao-d #o quanto eu preciso reduzir no meu d_solucao para ser factível?
@@ -96,12 +93,12 @@ def _repara_solucao(set_E_in,set_T_in, ai,bi,pi,d):
                                                 #isto é, supostamente os melhores a serem movidos para o set_T.
 
     pi_cumsum_zsort_set_E = np.cumsum(pi[zsort_set_E]) #valor acumulado dos pi na ordem considerada a melhor.
-    mudar = zsort_set_E[np.where(pi_cumsum_zsort_set_E<violacao)] #colho os índices dos que precisarão ser alterados
+    mudar_ate = np.nonzero(pi_cumsum_zsort_set_E>violacao)[0][0] #qual a primeira tarefa da lista ordenada que excede a violação?
+    mudar = zsort_set_E[:mudar_ate] #colho os índices dos que precisarão ser alterados
+    sol_[mudar] = np.logical_not(sol_[mudar]) #mudo de conjunto itens necessários para reparo
+    novo_set_E,novo_set_T = transforma(sol_)
     
-    #AINDA PRECISA AJUSTAR
-    # sol_ = transforma_bin_2(set_E, set_T)
-    # sol_[mudar] = np.logical_not(sol_[mudar]) #mudo de conjunto itens necessários para reparo
-    return 99999999999
+    return novo_set_E,novo_set_T
 
 
 @jit(nopython=True)
