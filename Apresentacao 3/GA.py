@@ -19,8 +19,7 @@ solucoes_pandas = pd.read_pickle('solucoes.pkl')
 solucoes = solucoes_pandas.to_dict()
 
 lista_hs = [0.8, 0.6, 0.4, 0.2]
-# conjuntos = [10,20,50,100,200,500,1000]
-conjuntos = [100,200,500,1000]
+conjuntos = [10,20,50,100,200,500,1000]
 lista_z = [0.25 , 0.5 , 0.6 , 0.75, 2]
 lista_problemas = list(range(1,11))
 
@@ -29,6 +28,7 @@ qtd_pop_inicial = {}
 for conjunto in conjuntos:
     for h in lista_hs:
         for problema in lista_problemas:
+            
             inicio=time.time()
             pi = np.array(dados[conjunto][problema]['pi'])
             ai = np.array(dados[conjunto][problema]['ai'])
@@ -36,19 +36,20 @@ for conjunto in conjuntos:
 
             d=int(sum(pi)*h)
 
-            lista_populacao_inicial = np.array([solucoes[(conjunto,problema,h,z_corte)] for z_corte in lista_z])
+            lista_populacao_inicial = np.array([solucoes[(c,p,hi,z_corte)] for (c,p,hi,z_corte) in solucoes if conjunto == c and problema == p and h == hi])
 
             melhor_obj, melhor_sol = 99999999999, np.array([])
-            for key in solucoes:
-                obj = calcula_objetivo(solucoes[key], ai, bi, pi, d)
+
+            for individuo in lista_populacao_inicial:
+                obj = calcula_objetivo(individuo, ai, bi, pi, d)
                 if obj < melhor_obj:
-                    melhor_obj, melhor_sol = obj, solucoes[key]
+                    melhor_obj, melhor_sol = obj, individuo
 
             populacao[(conjunto, h, problema)] = lista_populacao_inicial
             # list_arrays_unicos = list(map(np.array, set(map(tuple, lista_populacao_inicial))))
             # qtd_pop_inicial[(conjunto, h, problema)] = len(list_arrays_unicos)
 
-            n_iter_ga = 1000
+            n_iter_ga = 3000
             taxa_mutacao_inicial = 0.30
             n_pop_inicial = max(2,conjunto*0.1)
 
@@ -56,7 +57,9 @@ for conjunto in conjuntos:
             # cromossomos_unicos = len(list(map(np.array, set(map(tuple, populacao_total)))))
             populacao_pais = []
             populacao_filhos = []
+            populacao_pais = lista_populacao_inicial
             for iter in range(n_iter_ga):
+                ini = time.time()
                 populacao_filhos = []
 
                 taxa_mutacao = (n_iter_ga - iter)/n_iter_ga*(taxa_mutacao_inicial-0.01) + 0.01
@@ -65,16 +68,16 @@ for conjunto in conjuntos:
                     n_pop = int(n_pop_inicial + iter/2)
                 else:
                     n_pop = int(n_pop_inicial + n_iter_ga/2 - iter/2)
-                print(n_pop)
-                populacao_pais = np.array([coliseu(lista_populacao_inicial,2, ai, bi, pi, d)[0] for _ in range(n_pop*2)])
+
+                pais = np.array([coliseu(populacao_pais,2, ai, bi, pi, d)[0] for _ in range(n_pop*2)])
                 
                 for i in range(0, n_pop, 2):
-                    pai1, pai2 = populacao_pais[i], populacao_pais[i+1]
+                    pai1, pai2 = pais[i], pais[i+1]
                     filho = crossover_r(pai1, pai2)
                     filho_mutacao = mutacao(filho, taxa_mutacao)
                     populacao_filhos.append(filho_mutacao)
 
-                populacao_total = np.vstack((populacao_total,populacao_filhos))
+                populacao_total = np.vstack((populacao_pais,populacao_filhos))
 
                 cromossomos_unicos_pop = list(map(np.array, set(map(tuple, populacao_total))))
 
@@ -83,8 +86,11 @@ for conjunto in conjuntos:
                 fitness_cromossomos = []
                 for cromossomo in cromossomos_unicos_pop:
                     fitness_cromossomos.append(calcula_objetivo_GA(cromossomo, ai, bi, pi, d))
-                    
-                breakpoint()
+                
+                fitness_cromossomos = np.array(fitness_cromossomos)
+                fim = time.time()
+                print(iter, fim-ini)
+
 
 
 
