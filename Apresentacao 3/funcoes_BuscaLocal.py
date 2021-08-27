@@ -4,11 +4,11 @@ import pandas as pd
 from numba import jit
 from funcoes_gerais import *
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def calcula_objetivo(solucao, ai, bi, pi, d):
     
     set_E, set_T = transforma(solucao)
-    
+
     if np.sum(pi[set_E])>d:
         return 99999999999
   

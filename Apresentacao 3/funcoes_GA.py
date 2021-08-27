@@ -100,7 +100,6 @@ def _repara_solucao(set_E,set_T, ai,bi,pi,d):
     
     return novo_set_E,novo_set_T
 
-
 @jit(nopython=True)
 def oprime_fracos(objs,max_pop):
     len_objs = len(objs) 
@@ -124,8 +123,20 @@ def oprime_fracos(objs,max_pop):
     sobreviventes[oprimidos] = False
     return sobreviventes
 
-
 def avaliar_pop(cromossomos, ai, bi, pi, d):
     fitness_cromossomos = []
     for cromossomo in cromossomos:
         fitness_cromossomos.append(calcula_objetivo_GA(cromossomo, ai, bi, pi, d))
+
+
+@jit(nopython=True)
+def calcula_diversidade(sols,objs):
+    melhor = np.argmin(objs)
+    len_sols = len(sols[0])
+    igualdade =np.array([np.sum(sols[kk]==sols[melhor]) for kk in range(len(sols))]) #conta quantos bits iguais a melhor solucao em cada solução
+    #de todos bits da população,                                                                           
+    #quantos % são diferentes do melhor?
+    #substraí len_sols do numerador e denumerador para desconsiderar quando ele comparara a melhor com ela mesmo
+    #mas na prática é irrelevante.
+    diversidade_percent = (np.sum(igualdade)-len_sols)/((len(igualdade)*len_sols)-len_sols)
+    return diversidade_percent

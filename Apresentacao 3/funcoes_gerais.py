@@ -32,14 +32,10 @@ def transforma(solucao):
     set_T = np.nonzero(solucao == False)[0]
     return set_E,set_T
 
-def transforma_bin(set_E, conjunto):
-    solucao = range(0, conjunto)
-    solucao_bin = np.isin(solucao, set_E)
-    return solucao_bin
-
-def transforma_bin_2(set_E, set_T):
-    solucao = range(0, len(set_E)+len(set_T))
-    solucao_bin = np.isin(solucao, set_E)
+@jit(nopython=True)
+def transforma_bin(set_E, set_T):
+    solucao_bin = np.array([True]*(len(set_E)+len(set_T)))
+    solucao_bin[set_T] = False
     return solucao_bin
 
 @jit(nopython=True)
