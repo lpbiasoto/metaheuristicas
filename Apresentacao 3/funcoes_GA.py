@@ -35,14 +35,13 @@ def mutacao(sol,p): #sol = np.array com solução, formato booleano.
         copia_sol[cada_mutante] = np.logical_not(copia_sol[cada_mutante])
     return copia_sol
 
-
 @jit(nopython=True)
 def coliseu(sols, n, ai, bi, pi, d):   
     indices_array = len(sols) - 1
     sorteados =  np.array([int(round(np.random.random()*indices_array,0)) for i in range(0,n)]) 
     custo = 999999999999
     for competidor in sols[sorteados]:
-        objetivo_competidor = calcula_objetivo_GA(competidor, ai, bi, pi, d)
+        objetivo_competidor = calcula_objetivo_GA(competidor, ai, bi, pi, d)[1]
         if objetivo_competidor < custo:
             custo = objetivo_competidor
             competidor_vencedor = competidor
@@ -51,7 +50,7 @@ def coliseu(sols, n, ai, bi, pi, d):
 
 @jit(nopython=True)
 def calcula_objetivo_GA(solucao, ai, bi, pi, d):
-    
+
     set_E, set_T = transforma(solucao)
     
     if np.sum(pi[set_E])>d:
@@ -67,7 +66,7 @@ def calcula_objetivo_GA(solucao, ai, bi, pi, d):
 
     objetivo_minimo = calcula_objetivo_minimo(ai, bi, pi, set_E, set_T, d)
 
-    return objetivo_minimo
+    return transforma_bin(set_E, set_T), objetivo_minimo
 
 def verifica_factibilidade_e_repara_solucao(solucao, ai, bi, pi, d):
     set_E, set_T = transforma(solucao)
@@ -97,7 +96,7 @@ def _repara_solucao(set_E,set_T, ai,bi,pi,d):
     mudar = zsort_set_E[:mudar_ate] #colho os índices dos que precisarão ser alterados
     sol_[mudar] = np.logical_not(sol_[mudar]) #mudo de conjunto itens necessários para reparo
     novo_set_E,novo_set_T = transforma(sol_)
-    
+
     return novo_set_E,novo_set_T
 
 @jit(nopython=True)

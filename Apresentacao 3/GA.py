@@ -21,14 +21,14 @@ solucoes = solucoes_pandas.to_dict()
 lista_hs = [0.8, 0.6, 0.4, 0.2]
 conjuntos = [10,20,50,100,200,500,1000]
 lista_z = [0.25 , 0.5 , 0.6 , 0.75, 2]
-lista_problemas = list(range(1,11))
+# lista_problemas = list(range(1,11))
+lista_problemas = [3]
 
 populacao = {}
 qtd_pop_inicial = {}
 for conjunto in conjuntos:
     for h in lista_hs:
         for problema in lista_problemas:
-            
             inicio=time.time()
             pi = np.array(dados[conjunto][problema]['pi'])
             ai = np.array(dados[conjunto][problema]['ai'])
@@ -55,44 +55,70 @@ for conjunto in conjuntos:
             populacao_total = lista_populacao_inicial
             populacao_pais = lista_populacao_inicial
 
-            populacao_filhos = []
             for iter in range(n_iter_ga):
+                print('##1')
                 ini = time.time()
                 populacao_filhos = []
 
                 taxa_mutacao = (n_iter_ga - iter)/n_iter_ga*(taxa_mutacao_inicial-0.01) + 0.01
+                print('##2')
 
                 if iter <= n_iter_ga/2:
                     n_pop = int(n_pop_inicial + iter/2)
                 else:
                     n_pop = int(n_pop_inicial + n_iter_ga/2 - iter/2)
-                
-                for i in range(0, (len(populacao_total) - n_pop)):
+                print('##3')
+
+                for i in range(0, (n_pop*2 - len(populacao_total))):
                     pai1 = coliseu(populacao_pais,2, ai, bi, pi, d)[0]
                     pai2 = coliseu(populacao_pais,2, ai, bi, pi, d)[0]
                     filho = crossover_r(pai1, pai2)
                     filho_mutacao = mutacao(filho, taxa_mutacao)
                     populacao_filhos.append(filho_mutacao)
-                    populacao_total = np.vstack((populacao_total,populacao_filhos))
-
-                cromossomos_unicos = list(map(np.array, set(map(tuple, populacao_total))))
-
-                fitness_cromossomos = []
-                for cromossomo in cromossomos_unicos:
-                    fitness_cromossomos.append(calcula_objetivo_GA(cromossomo, ai, bi, pi, d))
+                print('##4')
                 
+                populacao_total = np.vstack((populacao_total,populacao_filhos))
+                
+                print('##5')
+                cromossomos_unicos = list(map(np.array, set(map(tuple, populacao_total))))
+                
+                print('##6')
+                fitness_cromossomos = []
+                cromossomos_reparados = []
+
+                for cromossomo in cromossomos_unicos:
+                    breakpoint()
+                    print('##6.1', cromossomo)
+                    solucao, obj = calcula_objetivo_GA(cromossomo, ai, bi, pi, d)
+                    
+                    print('##6.2', cromossomo)
+                    fitness_cromossomos.append(obj)
+                    cromossomos_reparados.append(solucao)
+                
+                print('##7')
                 fitness_cromossomos = np.array(fitness_cromossomos)
+                cromossomos_reparados = np.array(cromossomos_reparados)
+                
+                sobreviventes = oprime_fracos(fitness_cromossomos, n_pop)
+                print('##8')
 
-                print(len(cromossomos_unicos), len(fitness_cromossomos))
-                print(calcula_diversidade(cromossomos_unicos,fitness_cromossomos)) ##### função calcula_diversidade tá dando divisão por 0 quando o cromossomos únicos é 1
+                cromossomos_unicos = cromossomos_reparados[sobreviventes==True]
 
-                sobreviventes = oprime_fracos(fitness_cromossomos, max(n_pop*0.5,2))
+                fitness_cromossomos = fitness_cromossomos[sobreviventes==True]
+                fitness_cromossomos_sorted = np.flip(np.argsort(fitness_cromossomos)[::-1])
+                cromossomos_unicos = cromossomos_unicos[fitness_cromossomos_sorted]
+                fitness_cromossomos = fitness_cromossomos[fitness_cromossomos_sorted]
 
-                cromossomos_unicos = np.array(cromossomos_unicos)
-                cromossomos_unicos = cromossomos_unicos[sobreviventes==True]
+                if fitness_cromossomos[0] < melhor_obj:
+                    melhor_obj, melhor_sol = fitness_cromossomos[0], cromossomos_unicos[0]
+                    print(melhor_obj)
+                print('##9')
 
-
-
+                populacao_total = cromossomos_unicos
+                
+                print(iter,len(populacao_total), round(calcula_diversidade(cromossomos_unicos,fitness_cromossomos),2), melhor_obj, fitness_cromossomos[0])
+                # print(len(populacao_total))
+                populacao_pais = cromossomos_unicos[:max(2,int(0.1*n_pop))]
 
                 fim = time.time()
 
