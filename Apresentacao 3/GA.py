@@ -75,7 +75,6 @@ for conjunto in conjuntos:
                     populacao_filhos.append(filho_mutacao)
                     populacao_total = np.vstack((populacao_total,populacao_filhos))
 
-
                 cromossomos_unicos = list(map(np.array, set(map(tuple, populacao_total))))
 
                 fitness_cromossomos = []
@@ -87,12 +86,15 @@ for conjunto in conjuntos:
                 print(len(cromossomos_unicos), len(fitness_cromossomos))
                 print(calcula_diversidade(cromossomos_unicos,fitness_cromossomos)) ##### função calcula_diversidade tá dando divisão por 0 quando o cromossomos únicos é 1
 
-                sobreviventes = oprime_fracos(fitness_cromossomos, max(n_pop*0.5,2)) ##### como eu deveria tratar essa informação?
+                sobreviventes = oprime_fracos(fitness_cromossomos, max(n_pop*0.5,2))
 
-                breakpoint()
+                cromossomos_unicos = np.array(cromossomos_unicos)
+                cromossomos_unicos = cromossomos_unicos[sobreviventes==True]
+
+
+
 
                 fim = time.time()
-                print(iter, fim-ini)
 
 
 

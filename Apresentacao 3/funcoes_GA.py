@@ -138,5 +138,5 @@ def calcula_diversidade(sols,objs):
     #quantos % são diferentes do melhor?
     #substraí len_sols do numerador e denumerador para desconsiderar quando ele comparara a melhor com ela mesmo
     #mas na prática é irrelevante.
-    diversidade_percent = (np.sum(igualdade)-len_sols)/((len(igualdade)*len_sols)-len_sols)
+    diversidade_percent = (np.sum(igualdade))/((len(igualdade)*len_sols))
     return diversidade_percent
