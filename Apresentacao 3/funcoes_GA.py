@@ -80,7 +80,7 @@ def verifica_factibilidade_e_repara_solucao(solucao, ai, bi, pi, d):
 
 @jit(nopython=True)
 def _repara_solucao(set_E,set_T,ai,bi,pi,d):
-    sol_ = transforma_bin2(set_E,set_T)
+    sol_ = transforma_bin(set_E,set_T)
     d_solucao = np.sum(pi[set_E])
 
     if (d_solucao <= d): #solução não é infactível, vou sair sem fazer nada.
