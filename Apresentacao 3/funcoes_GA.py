@@ -79,11 +79,11 @@ def verifica_factibilidade_e_repara_solucao(solucao, ai, bi, pi, d):
     return solucao_reparada
 
 @jit(nopython=True)
-def _repara_solucao(set_E,set_T, ai,bi,pi,d):
-    sol_ = transforma_bin(set_E,set_T)
+def _repara_solucao(set_E,set_T,ai,bi,pi,d):
+    sol_ = transforma_bin2(set_E,set_T)
     d_solucao = np.sum(pi[set_E])
 
-    if (d_solucao < d): #solução não é infactível, vou sair sem fazer nada.
+    if (d_solucao <= d): #solução não é infactível, vou sair sem fazer nada.
         return (set_E,set_T)
 
     z = (bi-ai)/(bi+ai)
@@ -91,13 +91,12 @@ def _repara_solucao(set_E,set_T, ai,bi,pi,d):
     zsort_set_E = np.flip(np.argsort(z[set_E])) #os primeiros são os maiores Zs no set_E.
                                                 #isto é, supostamente os melhores a serem movidos para o set_T.
 
-    pi_cumsum_zsort_set_E = np.cumsum(pi[zsort_set_E]) #valor acumulado dos pi na ordem considerada a melhor.
-    mudar_ate = np.nonzero(pi_cumsum_zsort_set_E>violacao)[0][0] #qual a primeira tarefa da lista ordenada que excede a violação?
-    mudar = zsort_set_E[:mudar_ate] #colho os índices dos que precisarão ser alterados
+    pi_cumsum_zsort_set_E = np.cumsum(pi[set_E[zsort_set_E]]) #valor acumulado dos pi na ordem considerada a melhor.
+    mudar_ate = np.nonzero(pi_cumsum_zsort_set_E>violacao)[0][0]+1 #qual a primeira tarefa da lista ordenada que excede a violação?
+    mudar = set_E[zsort_set_E[:mudar_ate]] #colho os índices dos que precisarão ser alterados
     sol_[mudar] = np.logical_not(sol_[mudar]) #mudo de conjunto itens necessários para reparo
     novo_set_E,novo_set_T = transforma(sol_)
-
-    return novo_set_E,novo_set_T
+    return novo_set_E,novo_set_T 
 
 @jit(nopython=True)
 def oprime_fracos(objs,max_pop):
@@ -106,15 +105,15 @@ def oprime_fracos(objs,max_pop):
     sobreviventes = np.array([True]*len_objs) #começo com todos sobrevivendo.
     oprimir_quantos = len_objs - max_pop
 
-    if oprimir_quantos<0: #se eu não tiver exemplares demais, não preciso matar ninguém.
-        print(sobreviventes)
+    if oprimir_quantos<=0: #se eu não tiver exemplares demais, não preciso matar ninguém.
+        return sobreviventes
 
-    objs_decr = np.flip(np.argsort(objs))
+    objs_decr = np.argsort(objs)
 
     n_elitismo = max(3,int(max_pop*0.1))
     elite = objs_decr[:n_elitismo]
 
-    roleta =  np.array([np.random.random() for _ in range(len(objs))])
+    roleta =  np.array([np.random.random() for i in range(len(objs))])
     roleta[elite] = 1 
 
     oprimidos = np.argsort(roleta)[0:oprimir_quantos]
@@ -133,7 +132,7 @@ def calcula_diversidade(sols,objs):
     melhor = np.argmin(objs)
     len_sols = len(sols[0])
     igualdade =np.array([np.sum(sols[kk]==sols[melhor]) for kk in range(len(sols))]) #conta quantos bits iguais a melhor solucao em cada solução
-    #de todos bits da população,                                                                           
+    #de todos bits da população,                                                             
     #quantos % são diferentes do melhor?
     #substraí len_sols do numerador e denumerador para desconsiderar quando ele comparara a melhor com ela mesmo
     #mas na prática é irrelevante.
