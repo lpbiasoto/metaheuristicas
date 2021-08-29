@@ -131,7 +131,8 @@ def oprime_fracos(objs,max_pop):
 
     objs_decr = np.argsort(objs)
 
-    n_elitismo = max(3,int(max_pop*0.1))
+    n_elitismo = max(3,int(max_pop*0.75))
+    #n_elitismo = 1
     elite = objs_decr[:n_elitismo]
 
     roleta =  np.array([np.random.random() for i in range(len(objs))])
@@ -141,6 +142,43 @@ def oprime_fracos(objs,max_pop):
 
     sobreviventes[oprimidos] = False
     return sobreviventes
+
+
+@jit(nopython=True)
+def oprime_fracos_sorte(objs,max_pop):
+    len_objs = len(objs) 
+
+    sobreviventes = np.array([True]*len_objs) #começo com todos sobrevivendo.
+    oprimir_quantos = len_objs - max_pop
+
+    if oprimir_quantos<=0: #se eu não tiver exemplares demais, não preciso matar ninguém.
+        return sobreviventes
+
+    objs_decr = np.argsort(objs)
+
+#    n_elitismo = max(3,int(max_pop*0.1))
+    n_elitismo = 1
+    elite = objs_decr[:n_elitismo]
+    
+    max_delta = max(objs)-min(objs)
+    delta = objs-min(objs)
+    delta_fator = 1-(delta/max_delta)
+        
+
+    roleta =  np.array([np.random.random() for i in range(len(objs))])
+    roleta[elite] = 1
+    
+    sorte = roleta+delta_fator #os mais hábeis também tem mais sorte
+    
+    oprimidos = np.argsort(sorte)[0:oprimir_quantos]
+
+    sobreviventes[oprimidos] = False
+    return sobreviventes
+
+
+
+
+
 
 def avaliar_pop(cromossomos, ai, bi, pi, d):
     fitness_cromossomos = []
@@ -168,7 +206,7 @@ def expande_populacao(sols,objs,taxa_mutacao):
     n_melhores = max(1,int(numero_solucoes*0.1)) 
     index_melhores = np.argsort(objs)[-n_melhores:]
     #probabilidade extra reservada para os melhores serem pais.
-    incentivo_percent = 1
+    incentivo_percent = 0.33
     incentivo_percent_cada = incentivo_percent/n_melhores
     #o restante é distribuído entre todas soluções.
     ampla_disputa_percent = (1-incentivo_percent)
@@ -214,6 +252,24 @@ def expande_populacao(sols,objs,taxa_mutacao):
     return np.vstack((filhos,mutantes))
 
 
+def expande_populacao_so_mutantes(sols,objs,taxa_mutacao):
+    numero_solucoes = len(sols)    
+
+    mutantes = np.array([True]*len(sols[0]))
+    for cada_filho in sols:
+        brucutu = mutacao(cada_filho,taxa_mutacao)
+        mutantes = np.vstack((mutantes, brucutu))
+        
+    mutantes2 = np.array([True]*len(sols[0]))
+    for cada_filho in sols:
+        brucutu = mutacao(cada_filho,taxa_mutacao)
+        mutantes2 = np.vstack((mutantes2, brucutu))       
+        
+    mutantes = mutantes[1:]
+    mutantes2 = mutantes2[1:]
+    return np.vstack((mutantes,mutantes2))
+
+
 @jit(nopython=True)
 def calcula_objetivo_sr(solucao, ai, bi, pi, d): #sr = sem reparo
 
@@ -241,3 +297,24 @@ def avaliar_pop_sr(cromossomos, ai, bi, pi, d):
         
         fitness_cromossomos.append(calcula_objetivo_sr(cromossomo, ai, bi, pi, d))
     return np.array(fitness_cromossomos)
+
+
+def exporta_populacao(pop,objs,i): #exporta pop para excel, com objetivos. i é para diferenciar o nome do arquivo e facilitar exportar várias vezes sem fechar o arquivo
+    int_pop = np.int_(pop) #transformo os bools em int.
+    two_exp_n = np.flip(2**np.arange(len(pop[0]))) #calculo o peso de cada bit
+    pop_decimal = np.array([np.sum(int_pop[i]*two_exp_n) for i in range(len(pop))]) #multiplico e somo para saber o valor binário do gene
+
+    #pop_panda = pd.Series(pop_decimal)
+    #objs_panda = pd.Series(objs)
+    report = pd.ExcelWriter('pop_{}.xlsx'.format(i))
+    pop_export_dict = {"genes":pop_decimal,"obj":objs}
+    populacao_export = pd.DataFrame(data=pop_export_dict)
+
+    populacao_export.sort_values(by="obj",inplace=True) #ordenar pelos genes para ficar mais tratável
+
+    populacao_export.to_excel(report, sheet_name=("Populacao "+str(i)))
+    report.save()
+
+    
+    
+    
