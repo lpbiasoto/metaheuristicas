@@ -19,12 +19,13 @@ solucoes_pandas = pd.read_pickle('solucoes.pkl')
 solucoes = solucoes_pandas.to_dict()
 solucoes_GA = {}
 
-lista_hs = [0.8, 0.6, 0.4, 0.2]
-conjuntos = [10,20,50,100,200,500,1000]
-# conjuntos = [1000]
+# lista_hs = [0.8, 0.6, 0.4, 0.2]
+lista_hs = [0.4]
+# conjuntos = [10,20,50,100,200,500,1000]
+conjuntos = [1000]
 lista_z = [0.25 , 0.5 , 0.6 , 0.75, 2]
 lista_problemas = list(range(1,11))
-# lista_problemas = [3]
+lista_problemas = [9]
 
 populacao = {}
 qtd_pop_inicial = {}
@@ -44,6 +45,7 @@ for conjunto in conjuntos:
             obj_original = 0
             for individuo in lista_populacao_inicial:
                 obj = calcula_objetivo(individuo, ai, bi, pi, d)
+                
                 if obj < melhor_obj:
                     melhor_obj, melhor_sol = obj, individuo
                     obj_original = melhor_obj
@@ -52,14 +54,19 @@ for conjunto in conjuntos:
 
             populacao[(conjunto, h, problema)] = lista_populacao_inicial
 
-            n_iter_ga = 3000
-            taxa_mutacao_inicial = 0.75
-            n_pop_inicial = max(50,conjunto*0.1)
-            perc_pais_pop = 0.2
+            n_iter_ga = 2000
+            taxa_mutacao_inicial = 1/conjunto
+            n_pop_inicial = 500 #max(50,conjunto*0.1)
+            perc_pais_pop = 0.5
             num_pais_duelo = 2
+            taxa_elitismo = 0.75
 
             populacao_total = lista_populacao_inicial
             populacao_pais = lista_populacao_inicial
+
+            
+            fitness_populacao_inicial = np.array([calcula_objetivo(filho, ai, bi, pi, d) for filho in populacao_total])
+            populacao_fitness = fitness_populacao_inicial
 
             for iter in range(n_iter_ga):
                 # print('##1')
@@ -68,65 +75,75 @@ for conjunto in conjuntos:
 
                 taxa_mutacao = (n_iter_ga - iter)/n_iter_ga*(taxa_mutacao_inicial-0.01) + 0.01
                 # print('##2')
-
-                if iter <= n_iter_ga/2:
-                    n_pop = int(n_pop_inicial + iter/2)
-                else:
-                    n_pop = int(n_pop_inicial + n_iter_ga/2 - iter/2)
-                # print('##3')
-
-                for i in range(0, (n_pop*2 - len(populacao_total))):
-                    pai1 = coliseu(populacao_pais,num_pais_duelo, ai, bi, pi, d)[0]
-                    pai2 = coliseu(populacao_pais,num_pais_duelo, ai, bi, pi, d)[0]
-                    filho = crossover_r(pai1, pai2)
-                    filho_mutacao = mutacao(filho, taxa_mutacao)
-                    populacao_filhos.append(filho_mutacao)
-                # print('##4')
                 
-                populacao_total = np.vstack((populacao_total,populacao_filhos))
-                
-                # print('##5')
-                cromossomos_unicos = list(map(np.array, set(map(tuple, populacao_total))))
-                
-                # print('##6')
-                fitness_cromossomos = []
-                cromossomos_reparados = []
+                # if iter <= n_iter_ga/2:
+                #     n_pop = int(n_pop_inicial + iter/2)
+                # else:
+                #     n_pop = int(n_pop_inicial + n_iter_ga/2 - iter/2)
+                n_pop = n_pop_inicial
+                step1 = time.time()
+                # print("Step 1: ", ini - step1)
 
-                for cromossomo in cromossomos_unicos:
-                    # breakpoint()
-                    # print('##6.1', cromossomo)
-                    solucao, obj = calcula_objetivo_GA(cromossomo, ai, bi, pi, d)
+                populacao_filhos = [gerar_filho(populacao_pais, num_pais_duelo, ai, bi, pi, d) for _ in range(0, (int(n_pop*2) - len(populacao_total)))]
+                populacao_filhos_mutados = [mutacao(filho, taxa_mutacao, ai, bi, pi, d) for filho in populacao_filhos]
                     
-                    # print('##6.2', cromossomo)
-                    fitness_cromossomos.append(obj)
-                    cromossomos_reparados.append(solucao)
+                step2 = time.time()
+                # print("Step 2: ", step2 - step1)
+
+                populacao_total = np.vstack((populacao_total,populacao_filhos_mutados))
+                populacao_fitness = np.hstack((populacao_fitness,[calcula_objetivo_GA(filho, ai, bi, pi, d)[1] for filho in populacao_filhos_mutados]))
                 
-                # print('##7')
-                fitness_cromossomos = np.array(fitness_cromossomos)
-                cromossomos_reparados = np.array(cromossomos_reparados)
+                step3 = time.time()
+                # print("Step 3: ", step3 - step2)
+                # cromossomos_unicos = np.array([list(map(np.array, set(map(tuple, populacao_total))))])
+                # cromossomos_unicos = np.unique(populacao_total)
+                # cromossomos_unicos = populacao_total
+
+                step5 = time.time()
+
+
+                sobreviventes = oprime_fracos(populacao_fitness, n_pop, taxa_elitismo)
                 
-                sobreviventes = oprime_fracos(fitness_cromossomos, n_pop)
-                # print('##8')
+                step7 = time.time()
 
-                cromossomos_unicos = cromossomos_reparados[sobreviventes==True]
+                cromossomos_sobreviventes = populacao_total[sobreviventes==True]
+                fitness_sobreviventes = populacao_fitness[sobreviventes==True]
 
-                fitness_cromossomos = fitness_cromossomos[sobreviventes==True]
-                fitness_cromossomos_sorted = np.flip(np.argsort(fitness_cromossomos)[::-1])
-                cromossomos_unicos = cromossomos_unicos[fitness_cromossomos_sorted]
-                fitness_cromossomos = fitness_cromossomos[fitness_cromossomos_sorted]
+                fitness_sobreviventes_sorted = np.flip(np.argsort(fitness_sobreviventes)[::-1])
 
-                if fitness_cromossomos[0] < melhor_obj:
-                    melhor_obj, melhor_sol = fitness_cromossomos[0], cromossomos_unicos[0]
+                cromossomos_sobreviventes = cromossomos_sobreviventes[fitness_sobreviventes_sorted]
+                fitness_sobreviventes = fitness_sobreviventes[fitness_sobreviventes_sorted]
+
+                step8 = time.time()
+                # print("Step 8: ", step8 - step7)
+                if fitness_sobreviventes[0] < melhor_obj:
+                    melhor_obj, melhor_sol = fitness_sobreviventes[0], cromossomos_sobreviventes[0]
                     print(melhor_obj)
-                # print('##9')
 
-                populacao_total = cromossomos_unicos
+                populacao_total = cromossomos_sobreviventes
+                populacao_fitness = fitness_sobreviventes
+                populacao_pais = populacao_total[:max(2,int(perc_pais_pop*n_pop)+1)]
                 
-                print(conjunto, h, problema, iter,len(populacao_total), round(calcula_diversidade(cromossomos_unicos,fitness_cromossomos),2), obj_original, fitness_cromossomos[0])
-                # print(len(populacao_total))
-                populacao_pais = cromossomos_unicos[:max(2,int(perc_pais_pop*n_pop)+1)]
+                cromossomos_unicos = list(map(np.array, set(map(tuple, populacao_total))))
+                filhos_unicos = list(map(np.array, set(map(tuple, populacao_filhos))))
+                pais_unicos = list(map(np.array, set(map(tuple, populacao_pais))))
+                print(conjunto, h, problema, iter,len(populacao_total),len(filhos_unicos)/len(populacao_filhos),len(pais_unicos)/len(populacao_pais), len(cromossomos_unicos)/len(populacao_total), obj_original, populacao_fitness[0])
+                
+                #### Comentei a parte que reseta a aleatoriedade... se for reativar, precisa ajustar algum bug que ainda tá dando quando chama a função oprime_fracos
+                # if len(cromossomos_unicos)/len(populacao_total) < 0.2 and iter > 10:
+                #     print("Aleatoriedade abaixo de 20%")
+                #     # breakpoint()
+                #     populacao_total = np.vstack((populacao_total[:max(2,int(perc_pais_pop*n_pop/2)+1)],lista_populacao_inicial))#np.array([cromossomo for cromossomo in cromossomos_unicos])
+                #     populacao_fitness = np.array([calcula_objetivo_GA(cromossomo, ai, bi, pi, d)[1] for cromossomo in cromossomos_unicos])
+                #     populacao_pais = populacao_total[:max(2,int(perc_pais_pop*n_pop)+1)]
+
 
                 fim = time.time()
+                # print("Fim: ", fim-ini)
+                # breakpoint()
+                # print(len(populacao_total))
+                
+                
 
 
 
