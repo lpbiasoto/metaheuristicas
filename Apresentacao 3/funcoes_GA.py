@@ -5,6 +5,17 @@ from numba import jit
 from funcoes_gerais import *
 
 @jit(nopython=True)
+def gerar_filho(populacao_pais, num_pais_duelo, ai, bi, pi, d):
+    pai1 = coliseu(populacao_pais,num_pais_duelo, ai, bi, pi, d)[0]
+    pai2 = coliseu(populacao_pais,num_pais_duelo, ai, bi, pi, d)[0]
+    filho = crossover_r(pai1, pai2)
+    # filho_reparado, obj = calcula_objetivo_GA(filho, ai, bi, pi, d)
+
+    filho_reparado = verifica_factibilidade_e_repara_solucao(filho, ai, bi, pi, d)
+
+    return filho_reparado#, obj
+
+@jit(nopython=True)
 def crossover(p1,p2):     #p1,p2 = np.array com soluções, formato booleano.
     tamanho = len(p1)
     metade = int(tamanho/2)
@@ -27,13 +38,16 @@ def crossover_r(p1,p2):     #p1,p2 = np.array com soluções, formato booleano.
     return filho #falta incluir uma função de reparo de infactíveis
 
 @jit(nopython=True)
-def mutacao(sol,p): #sol = np.array com solução, formato booleano.
+def mutacao(sol, p, ai, bi, pi, d): #sol = np.array com solução, formato booleano.
                     #p = probabilidade de cada bit sofrer mutação, float ;  [0,1].
     roleta =  np.array([np.random.random() for i in range(len(sol))])
     copia_sol = np.copy(sol)
     for cada_mutante in np.where(roleta<=p):
         copia_sol[cada_mutante] = np.logical_not(copia_sol[cada_mutante])
-    return copia_sol
+    
+    sol_reparada = verifica_factibilidade_e_repara_solucao(copia_sol, ai, bi, pi, d)
+
+    return sol_reparada#, obj
 
 @jit(nopython=True)
 def coliseu(sols, n, ai, bi, pi, d):   
@@ -68,12 +82,13 @@ def calcula_objetivo_GA(solucao, ai, bi, pi, d):
 
     return transforma_bin(set_E, set_T), objetivo_minimo
 
+
+@jit(nopython=True)
 def verifica_factibilidade_e_repara_solucao(solucao, ai, bi, pi, d):
     set_E, set_T = transforma(solucao)
     
     if np.sum(pi[set_E])>d:
         set_E, set_T = _repara_solucao(set_E,set_T,ai,bi,pi,d)
-        print(np.sum(pi[set_E])>d)
 
     solucao_reparada = transforma_bin(set_E, set_T)
     return solucao_reparada
@@ -120,7 +135,7 @@ def repara_solucao(set_E,set_T,ai,bi,pi,d):
     return novo_set_E,novo_set_T 
 
 @jit(nopython=True)
-def oprime_fracos(objs,max_pop,percent_elitismo=0.75):
+def oprime_fracos(objs,max_pop, taxa_elitismo = 0.75):
     len_objs = len(objs) 
 
     sobreviventes = np.array([True]*len_objs) #começo com todos sobrevivendo.
@@ -131,7 +146,7 @@ def oprime_fracos(objs,max_pop,percent_elitismo=0.75):
 
     objs_decr = np.argsort(objs)
 
-    n_elitismo = max(3,int(max_pop*percent_elitismo))
+    n_elitismo = max(3,int(max_pop*taxa_elitismo))
     #n_elitismo = 1
     elite = objs_decr[:n_elitismo]
 
