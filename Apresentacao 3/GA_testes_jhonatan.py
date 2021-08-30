@@ -18,12 +18,13 @@ solucoes_pandas = pd.read_pickle('solucoes.pkl')
 solucoes = solucoes_pandas.to_dict()
 solucoes_GA = {}
 
-lista_hs = [0.8, 0.6, 0.4, 0.2]
+#lista_hs = [0.8, 0.6, 0.4, 0.2]
+lista_hs = [0.4]
 #conjuntos = [10,20,50,100,200,500,1000]
 conjuntos = [1000]
 lista_z = [0.25 , 0.5 , 0.6 , 0.75, 2]
 #lista_problemas = list(range(1,11))
-lista_problemas = [5]
+lista_problemas = [9]
 
 populacao = {}
 qtd_pop_inicial = {}
@@ -52,7 +53,7 @@ for conjunto in conjuntos:
             populacao[(conjunto, h, problema)] = lista_populacao_inicial
 
             n_iter_ga = 3000
-            taxa_mutacao_inicial = 0
+            taxa_mutacao_inicial = 0.001
             n_pop_inicial = max(50,conjunto*0.1)
             perc_pais_pop = 0.2
             num_pais_duelo = 2
