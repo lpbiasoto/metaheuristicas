@@ -120,7 +120,7 @@ def repara_solucao(set_E,set_T,ai,bi,pi,d):
     return novo_set_E,novo_set_T 
 
 @jit(nopython=True)
-def oprime_fracos(objs,max_pop):
+def oprime_fracos(objs,max_pop,percent_elitismo=0.75):
     len_objs = len(objs) 
 
     sobreviventes = np.array([True]*len_objs) #começo com todos sobrevivendo.
@@ -131,7 +131,7 @@ def oprime_fracos(objs,max_pop):
 
     objs_decr = np.argsort(objs)
 
-    n_elitismo = max(3,int(max_pop*0.75))
+    n_elitismo = max(3,int(max_pop*percent_elitismo))
     #n_elitismo = 1
     elite = objs_decr[:n_elitismo]
 
