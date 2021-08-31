@@ -16,6 +16,66 @@ def gerar_filho(populacao_pais, num_pais_duelo, ai, bi, pi, d):
     return filho_reparado#, obj
 
 @jit(nopython=True)
+def gerar_filho_roleta(sols, objs, ai, bi, pi, d):
+    numero_solucoes = len(sols)
+    #número de soluções com paternidade incentivada
+    n_melhores = max(1,int(numero_solucoes*0.1)) 
+    index_melhores = np.argsort(objs)[-n_melhores:]
+    #probabilidade extra reservada para os melhores serem pais.
+    incentivo_percent = 0.33
+    incentivo_percent_cada = incentivo_percent/n_melhores
+    #o restante é distribuído entre todas soluções.
+    ampla_disputa_percent = (1-incentivo_percent)
+    ampla_disputa_percent_cada = ampla_disputa_percent/numero_solucoes
+
+
+    #lista com a chance de cada solução ser pai:
+    #se fosse uma roleta com circunferência 1,
+    #seria o comprimento de arco de cada solução.
+    chance_ser_pai = np.array([ampla_disputa_percent_cada]*numero_solucoes)
+    chance_ser_pai[index_melhores] += incentivo_percent_cada
+
+    #numero acumulado da chance. 
+    #exemplo, se a lista de ticket é [0.3,0.9,1] 
+    #e eu sortear 0.5, o ticket sorteado foi o segundo.
+    #se eu sortear 0, o ticket sorteado foi o primeiro.
+    #se eu sortear 0.90001 foi o terceiro
+    ticket = np.cumsum(chance_ser_pai)
+
+    #número de soluções geradas é igual ao número de soluções na entrada.
+    #em outras palavras, dobra a população.
+    roleta_pai1 = np.array([np.random.random() for nao_importa in range(numero_solucoes)])
+    roleta_pai2 = np.array([np.random.random() for nao_importa in range(numero_solucoes)])
+
+    lista_pai1 = np.array([np.sum(cada_sorteio>=ticket) for cada_sorteio in roleta_pai1])
+    lista_pai2 = np.array([np.sum(cada_sorteio>=ticket) for cada_sorteio in roleta_pai2])
+
+    
+    filhos = np.expand_dims(sols[0], 0)
+    for cada_cruzamento in range(numero_solucoes):
+        parente1 = sols[lista_pai1[cada_cruzamento]]
+        parente2 = sols[lista_pai2[cada_cruzamento]]
+        filho_atual = np.expand_dims(crossover_r(parente1,parente2),0)
+        filhos = np.vstack((filhos,filho_atual))
+    filhos = filhos[1:]
+
+    filhos_reparados = np.expand_dims(sols[0], 0)
+    for cada_filho in filhos:
+        filho_reparado_ultimo = np.expand_dims(verifica_factibilidade_e_repara_solucao(cada_filho, ai, bi, pi, d),0)
+        filhos_reparados = np.vstack((filhos_reparados,filho_reparado_ultimo))
+    filhos_reparados = filhos[1:]
+
+    return filhos_reparados#, obj
+
+   
+    for indice_do_filho, cada_filho in enumerate(filhos):
+        filhos[indice_do_filho] = verifica_factibilidade_e_repara_solucao(cada_filho, ai, bi, pi, d)
+       
+
+    return filhos#, obj
+
+
+@jit(nopython=True)
 def crossover(p1,p2):     #p1,p2 = np.array com soluções, formato booleano.
     tamanho = len(p1)
     metade = int(tamanho/2)
