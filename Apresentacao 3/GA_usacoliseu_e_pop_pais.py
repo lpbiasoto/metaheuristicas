@@ -71,8 +71,9 @@ for conjunto in conjuntos:
             n_pop = n_pop_inicial
             taxa_mutacao = taxa_mutacao_inicial
             for iter in range(n_iter_ga):
-                # print('##1')
+                print('##1')
                 ini = time.time()
+
                 step1 = time.time()
                 
 
@@ -88,23 +89,27 @@ for conjunto in conjuntos:
                     #     n_pop = int(n_pop_inicial + n_iter_ga/2 - iter/2)
                     
                     
-                    # print("Step 1: ", ini - step1)
+                    print("Step 1 - Coliseu: ", ini - step1)
 
                     populacao_filhos = [gerar_filho(populacao_pais, num_pais_duelo, ai, bi, pi, d) for _ in range(0, (int(n_pop*2) - len(populacao_total)))]
                 if usa_coliseu == 0:
+                    
+                    print("Step 1 - Roleta: ", ini - step1, len(populacao_pais), len(populacao_fitness))
                     populacao_filhos = gerar_filho_roleta(populacao_pais,populacao_fitness,ai,bi,pi,d)
 
+                step2 = time.time()
+                print("Step 2: ", step2 - step1, len(populacao_filhos))
 
                 populacao_filhos_mutados = [mutacao(filho, taxa_mutacao, ai, bi, pi, d) for filho in populacao_filhos]
                     
-                step2 = time.time()
-                # print("Step 2: ", step2 - step1)
+                step3 = time.time()
+                print("Step 3: ", step3 - step2)
 
                 populacao_total = np.vstack((populacao_total,populacao_filhos_mutados))
                 populacao_fitness = np.hstack((populacao_fitness,[calcula_objetivo_GA(filho, ai, bi, pi, d)[1] for filho in populacao_filhos_mutados]))
                 
-                step3 = time.time()
-                # print("Step 3: ", step3 - step2)
+                step4 = time.time()
+                print("Step 4: ", step4 - step3)
                 # cromossomos_unicos = np.array([list(map(np.array, set(map(tuple, populacao_total))))])
                 # cromossomos_unicos = np.unique(populacao_total)
                 # cromossomos_unicos = populacao_total
@@ -115,6 +120,7 @@ for conjunto in conjuntos:
                 sobreviventes = oprime_fracos(populacao_fitness, n_pop, taxa_elitismo)
                 
                 step7 = time.time()
+                print("Step 7: ", step7 - step5)
 
                 cromossomos_sobreviventes = populacao_total[sobreviventes==True]
                 fitness_sobreviventes = populacao_fitness[sobreviventes==True]
@@ -125,15 +131,19 @@ for conjunto in conjuntos:
                 fitness_sobreviventes = fitness_sobreviventes[fitness_sobreviventes_sorted]
 
                 step8 = time.time()
-                # print("Step 8: ", step8 - step7)
+                print("Step 8: ", step8 - step7)
                 if fitness_sobreviventes[0] < melhor_obj:
                     melhor_obj, melhor_sol = fitness_sobreviventes[0], cromossomos_sobreviventes[0]
                     print(melhor_obj)
 
+                step9 = time.time()
+                print("Step 9: ", step9 - step8)
                 populacao_total = cromossomos_sobreviventes
                 populacao_fitness = fitness_sobreviventes
                 populacao_pais = populacao_total[:max(2,int(perc_pais_pop*n_pop)+1)]
                 
+                step10 = time.time()
+                print("Step 10: ", step10 - step9)
                 cromossomos_unicos = list(map(np.array, set(map(tuple, populacao_total))))
                 filhos_unicos = list(map(np.array, set(map(tuple, populacao_filhos))))
                 pais_unicos = list(map(np.array, set(map(tuple, populacao_pais))))
@@ -149,6 +159,8 @@ for conjunto in conjuntos:
 
 
                 fim = time.time()
+                
+                print("Fim: ", fim - step8)
                 # print("Fim: ", fim-ini)
                 # breakpoint()
                 # print(len(populacao_total))
