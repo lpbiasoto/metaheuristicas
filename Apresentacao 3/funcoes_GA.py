@@ -8,7 +8,8 @@ from funcoes_gerais import *
 def gerar_filho(populacao_pais, num_pais_duelo, ai, bi, pi, d):
     pai1 = coliseu(populacao_pais,num_pais_duelo, ai, bi, pi, d)[0]
     pai2 = coliseu(populacao_pais,num_pais_duelo, ai, bi, pi, d)[0]
-    filho = crossover_r(pai1, pai2)
+    #filho = crossover_r(pai1, pai2)
+    filho = crossover(pai1, pai2)    
     # filho_reparado, obj = calcula_objetivo_GA(filho, ai, bi, pi, d)
 
     filho_reparado = verifica_factibilidade_e_repara_solucao(filho, ai, bi, pi, d)
