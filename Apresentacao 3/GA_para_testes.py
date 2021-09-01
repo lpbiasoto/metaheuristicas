@@ -33,7 +33,7 @@ populacao = {}
 qtd_pop_inicial = {}
 n_pop_inicial = 500 #max(50,conjunto*0.1)
 n_iter_ga = 1000
-n_repeticoes = 1 
+n_repeticoes = 2 
 num_pais_duelo = 2
 
 taxa_mutacao_inicial = 1
