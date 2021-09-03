@@ -31,7 +31,7 @@ lista_problemas = [1]
 populacao = {}
 qtd_pop_inicial = {}
 n_pop_inicial = 500 #max(50,conjunto*0.1)
-n_iter_ga = 5000
+n_iter_ga = 1000
 n_repeticoes = 1
 num_pais_duelo = 2
 
@@ -63,21 +63,9 @@ def algortimo_genetico(n_iter_ga,taxa_mutacao_inicial,n_pop_inicial,perc_pais_po
     taxa_mutacao = taxa_mutacao_inicial/conjunto
     for iter in range(n_iter_ga):
 
-        if usa_coliseu == 1:
-            
-            inchar = (int(n_pop*2) - len(populacao_total))
-            inchar_range = np.arange(0,inchar)
-            pop_filhos_temp = np.expand_dims(populacao_total[0],0)
-            for _ in inchar_range:
-                pop_filhos_temp_temp = np.expand_dims(gerar_filho(populacao_pais, num_pais_duelo, ai, bi, pi, d),0)
-                pop_filhos_temp = np.vstack((pop_filhos_temp,pop_filhos_temp_temp))
-            populacao_filhos = pop_filhos_temp[1:]
         
-        
-        if usa_coliseu == 0:
-
-            pop_filhos_temp = gerar_filho_roleta(populacao_total,populacao_fitness,ai,bi,pi,d)            
-            populacao_filhos = np.expand_dims(pop_filhos_temp,0)
+        pop_filhos_temp = gerar_filho_roleta(populacao_total,populacao_fitness,ai,bi,pi,d)            
+        #populacao_filhos = np.expand_dims(pop_filhos_temp,0)
 
 
         populacao_filhos_mutados = np.expand_dims(pop_filhos_temp[0],0)
@@ -91,7 +79,9 @@ def algortimo_genetico(n_iter_ga,taxa_mutacao_inicial,n_pop_inicial,perc_pais_po
         populacao_total = np.vstack((populacao_total,pop_filhos_temp))
         
         mutantes_fitness = np.array([calcula_objetivo_GA(filho, ai, bi, pi, d)[1] for filho in populacao_filhos_mutados])
+        filhos_fitness = np.array([calcula_objetivo_GA(filho, ai, bi, pi, d)[1] for filho in pop_filhos_temp])
         populacao_fitness = np.append(populacao_fitness,mutantes_fitness)
+        populacao_fitness = np.append(populacao_fitness,filhos_fitness)
         sobreviventes = oprime_fracos(populacao_fitness, n_pop, taxa_elitismo)
 
 
