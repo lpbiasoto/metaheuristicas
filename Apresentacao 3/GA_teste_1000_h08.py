@@ -20,21 +20,23 @@ solucoes = solucoes_pandas.to_dict()
 solucoes_GA = {}
 objetivos_GA = {}
 tempos = {}
-lista_hs = [0.8, 0.6, 0.4, 0.2]
-conjuntos = [10,20,50,100,200,500,1000]
+#lista_hs = [0.8, 0.6, 0.4, 0.2]
+lista_hs = [0.8]
+#conjuntos = [10,20,50,100,200,500,1000]
+conjuntos = [1000]
 lista_z = [0.25 , 0.5 , 0.6 , 0.75, 2]
-#lista_problemas = list(range(1,11))
-lista_problemas = [3,7]
+lista_problemas = [1]
+
 
 populacao = {}
 qtd_pop_inicial = {}
 n_pop_inicial = 500 #max(50,conjunto*0.1)
 n_iter_ga = 1000
-n_repeticoes = 1 
+n_repeticoes = 1
 num_pais_duelo = 2
 
 taxa_mutacao_inicial = 1
-taxa_elitismo = 0.75
+taxa_elitismo = 1
 usa_coliseu = 0
 perc_pais_pop = taxa_elitismo
 
@@ -61,6 +63,7 @@ def algortimo_genetico(n_iter_ga,taxa_mutacao_inicial,n_pop_inicial,perc_pais_po
     taxa_mutacao = taxa_mutacao_inicial/conjunto
     for iter in range(n_iter_ga):
 
+        
         pop_filhos_temp = gerar_filho_roleta(populacao_total,populacao_fitness,ai,bi,pi,d)            
         #populacao_filhos = np.expand_dims(pop_filhos_temp,0)
 
@@ -118,87 +121,56 @@ def algortimo_genetico(n_iter_ga,taxa_mutacao_inicial,n_pop_inicial,perc_pais_po
 #taxa_elitismo  = 0.35, 0.75, 1
 #só filhos mutantes  = 1 , 0
 
-lista_crossover = [0]
-lista_elitismo = [0.35 , 0.75 , 1]
-#lista_so_filho_mutante = [0 , 1]
-lista_taxa_mutacao = [0.1 , 1 , 10]
 rodada_numero = 0
-numero_rodadas = len(lista_crossover)*len(lista_elitismo)*len(lista_taxa_mutacao)*n_repeticoes*len(conjuntos)*len(lista_hs)*len(lista_problemas)
+numero_rodadas = n_repeticoes*len(conjuntos)*len(lista_hs)*len(lista_problemas)
 
-for cada_tipo_crossover in lista_crossover:
-    for cada_elitismo in lista_elitismo:
-        for cada_mutacao in lista_taxa_mutacao:
-            for repeticoes in range(n_repeticoes):
-                for conjunto in conjuntos:
-                    for h in lista_hs:
-                        for problema in lista_problemas:
-                            rodada_numero += 1
-                            print("Iniciando rodada {} de {} ({} {} {} {})".format(rodada_numero,numero_rodadas,conjunto, h, problema, repeticoes ))
-                            taxa_mutacao_inicial = min(cada_mutacao/conjunto,0.5)
-                            taxa_elitismo = cada_elitismo
-                            usa_coliseu = cada_tipo_crossover
+for repeticoes in range(n_repeticoes):
+    for conjunto in conjuntos:
+        for h in lista_hs:
+            for problema in lista_problemas:
+                rodada_numero += 1
+                print("Iniciando rodada {} de {} ({} {} {} {})".format(rodada_numero,numero_rodadas,conjunto, h, problema, repeticoes ))
 
-                            perc_pais_pop = taxa_elitismo
+                inicio=time.time()
+                pi = np.array(dados[conjunto][problema]['pi'])
+                ai = np.array(dados[conjunto][problema]['ai'])
+                bi = np.array(dados[conjunto][problema]['bi'])
 
+                d=int(sum(pi)*h)
 
-
-
-
-                            inicio=time.time()
-                            pi = np.array(dados[conjunto][problema]['pi'])
-                            ai = np.array(dados[conjunto][problema]['ai'])
-                            bi = np.array(dados[conjunto][problema]['bi'])
-
-                            d=int(sum(pi)*h)
-
-                            lista_populacao_inicial = np.array([solucoes[(c,p,hi,z_corte)] for (c,p,hi,z_corte) in solucoes if conjunto == c and problema == p and h == hi])
-
-                            
-                            
-                            melhor_obj,melhor_sol = algortimo_genetico(n_iter_ga,taxa_mutacao_inicial,n_pop_inicial,perc_pais_pop,num_pais_duelo,taxa_elitismo,usa_coliseu,ai,bi,pi,d,repeticoes,lista_populacao_inicial,conjunto,h,problema)                
-                            
-                            fim = time.time()   
-
-                            solucoes_GA[(conjunto, h, problema,taxa_mutacao_inicial, usa_coliseu, taxa_elitismo, repeticoes)] = melhor_sol
-                            objetivos_GA[(conjunto, h, problema,taxa_mutacao_inicial, usa_coliseu, taxa_elitismo, repeticoes)] = melhor_obj
-                            tempos[(conjunto, h, problema,taxa_mutacao_inicial, usa_coliseu, taxa_elitismo, repeticoes)] = fim-inicio
+                lista_populacao_inicial = np.array([solucoes[(c,p,hi,z_corte)] for (c,p,hi,z_corte) in solucoes if conjunto == c and problema == p and h == hi])
 
                 
+                
+                melhor_obj,melhor_sol = algortimo_genetico(n_iter_ga,taxa_mutacao_inicial,n_pop_inicial,perc_pais_pop,num_pais_duelo,taxa_elitismo,usa_coliseu,ai,bi,pi,d,repeticoes,lista_populacao_inicial,conjunto,h,problema)                
+                
+                fim = time.time()   
 
+                solucoes_GA[(conjunto, h, problema, repeticoes)] = melhor_sol
+                objetivos_GA[(conjunto, h, problema, repeticoes)] = melhor_obj
+                tempos[(conjunto, h, problema, repeticoes)] = fim-inicio    
 
-
-
-                #breakpoint()
-                # for iteracoes in range(1,100):
-
-                # for cromossomo_inicial in lista_populacao_inicial:
-                    
-                #     for i in range(1, 51):
-                #         populacao_total.append(mutacao(cromossomo_inicial, 0.3))
 objetivos_pandas = pd.Series(objetivos_GA)
 tempos_pandas = pd.Series(tempos)
-hora  = time.strftime("%y %m %d - %H h %M m")#
-report = pd.ExcelWriter('resultados_GA {}.xlsx'.format(hora))
 
+report = pd.ExcelWriter('resultados_GA.xlsx')
 
-#objetivos_unstack = objetivos_pandas.unstack(level=-3)
-#objetivos_unstack.to_excel(report, sheet_name=("Objetivos"))
 objetivos_pandas.to_excel(report, sheet_name=("Objetivos"))
 
 
-#t_unstack = tempos_pandas.unstack(level=-3)
 tempos_pandas.to_excel(report,sheet_name="Tempos")
 
 report.save()
 
-with open("solucoes_GA {}.pkl".format(hora), "wb") as infile:
+with open("solucoes_GA.pkl", "wb") as infile:
     pickle.dump(solucoes_GA, infile)
 
-with open("objetivos_GA {}.pkl".format(hora), "wb") as infile:
+with open("objetivos_GA.pkl", "wb") as infile:
     pickle.dump(objetivos_GA, infile)
 
-with open("tempos_pandas {}.pkl".format(hora), "wb") as infile:
+with open("tempos_pandas.pkl", "wb") as infile:
     pickle.dump(tempos, infile)
+
 
 print("Finalizado em ", (fim-inicio_de_verdade), "segundos")
 

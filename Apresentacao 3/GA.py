@@ -171,10 +171,10 @@ with open("solucoes_GA.pkl", "wb") as infile:
     pickle.dump(solucoes_GA, infile)
 
 with open("objetivos_GA.pkl", "wb") as infile:
-    pickle.dump(solucoes_GA, infile)
+    pickle.dump(objetivos_GA, infile)
 
-with open("tempos_pandas.pkl", "wb") as infile:
-    pickle.dump(solucoes_GA, infile)
+with open("tempos.pkl", "wb") as infile:
+    pickle.dump(tempos, infile)
 
 
 
