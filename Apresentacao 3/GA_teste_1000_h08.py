@@ -60,7 +60,7 @@ def algortimo_genetico(n_iter_ga,taxa_mutacao_inicial,n_pop_inicial,perc_pais_po
     fitness_populacao_inicial = np.array([calcula_objetivo_sr(filho, ai, bi, pi, d) for filho in populacao_total])
     populacao_fitness = fitness_populacao_inicial
     n_pop = n_pop_inicial
-    taxa_mutacao = taxa_mutacao_inicial/conjunto
+    taxa_mutacao = min(taxa_mutacao_inicial/conjunto,0.5)
     for iter in range(n_iter_ga):
 
         
@@ -153,23 +153,29 @@ for repeticoes in range(n_repeticoes):
 objetivos_pandas = pd.Series(objetivos_GA)
 tempos_pandas = pd.Series(tempos)
 
-report = pd.ExcelWriter('resultados_GA.xlsx')
+hora  = time.strftime("%y %m %d - %H h %M m")#
+report = pd.ExcelWriter('resultados_GA {}.xlsx'.format(hora))
 
+
+#objetivos_unstack = objetivos_pandas.unstack(level=-3)
+#objetivos_unstack.to_excel(report, sheet_name=("Objetivos"))
 objetivos_pandas.to_excel(report, sheet_name=("Objetivos"))
 
 
+#t_unstack = tempos_pandas.unstack(level=-3)
 tempos_pandas.to_excel(report,sheet_name="Tempos")
 
 report.save()
 
-with open("solucoes_GA.pkl", "wb") as infile:
+with open("solucoes_GA {}.pkl".format(hora), "wb") as infile:
     pickle.dump(solucoes_GA, infile)
 
-with open("objetivos_GA.pkl", "wb") as infile:
+with open("objetivos_GA {}.pkl".format(hora), "wb") as infile:
     pickle.dump(objetivos_GA, infile)
 
-with open("tempos_pandas.pkl", "wb") as infile:
+with open("tempos_pandas {}.pkl".format(hora), "wb") as infile:
     pickle.dump(tempos, infile)
+
 
 
 print("Finalizado em ", (fim-inicio_de_verdade), "segundos")
