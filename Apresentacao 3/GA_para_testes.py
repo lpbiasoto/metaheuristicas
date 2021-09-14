@@ -30,7 +30,7 @@ populacao = {}
 qtd_pop_inicial = {}
 n_pop_inicial = 500 #max(50,conjunto*0.1)
 n_iter_ga = 1000
-n_repeticoes = 1 
+n_repeticoes = 3
 num_pais_duelo = 2
 
 taxa_mutacao_inicial = 1
@@ -121,7 +121,7 @@ def algortimo_genetico(n_iter_ga,taxa_mutacao_inicial,n_pop_inicial,perc_pais_po
 lista_crossover = [0]
 lista_elitismo = [0.35 , 0.75 , 1]
 #lista_so_filho_mutante = [0 , 1]
-lista_taxa_mutacao = [0.1 , 1 , 10]
+lista_taxa_mutacao = [0.5 , 1 , 5]
 rodada_numero = 0
 numero_rodadas = len(lista_crossover)*len(lista_elitismo)*len(lista_taxa_mutacao)*n_repeticoes*len(conjuntos)*len(lista_hs)*len(lista_problemas)
 
@@ -134,21 +134,15 @@ for cada_tipo_crossover in lista_crossover:
                         for problema in lista_problemas:
                             rodada_numero += 1
                             print("Iniciando rodada {} de {} ({} {} {} {})".format(rodada_numero,numero_rodadas,conjunto, h, problema, repeticoes ))
-                            taxa_mutacao_inicial = min(cada_mutacao/conjunto,0.5)
+                            taxa_mutacao_inicial = cada_mutacao
                             taxa_elitismo = cada_elitismo
                             usa_coliseu = cada_tipo_crossover
 
                             perc_pais_pop = taxa_elitismo
-
-
-
-
-
                             inicio=time.time()
                             pi = np.array(dados[conjunto][problema]['pi'])
                             ai = np.array(dados[conjunto][problema]['ai'])
                             bi = np.array(dados[conjunto][problema]['bi'])
-
                             d=int(sum(pi)*h)
 
                             lista_populacao_inicial = np.array([solucoes[(c,p,hi,z_corte)] for (c,p,hi,z_corte) in solucoes if conjunto == c and problema == p and h == hi])
